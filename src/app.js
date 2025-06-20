@@ -3,6 +3,8 @@ import cors from "cors";
 import './passport.js'
 import session from 'express-session';
 import passport from 'passport';
+import sql from './database/db.js';
+import crypto from 'crypto';
 
 const app = express();
 
@@ -36,12 +38,18 @@ app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-app.get('/auth/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: '/login',
-    successRedirect: '/dashboard'
-  })
-);
+// handle Google OAuth callback and redirect with code token
+app.get('/auth/google/callback', (req, res, next) => {
+  passport.authenticate('google', (err, user, info) => {
+    if (err) return next(err);
+    if (!user) return res.redirect('/login');
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      // redirect to the redirect page with the code
+      return res.redirect(`/redirect.html?code=${user.code}`);
+    });
+  })(req, res, next);
+});
 
 app.get('/dashboard', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/login');
@@ -57,6 +65,22 @@ app.get('/logout', (req, res) => {
     if (err) return next(err);
     res.redirect('/');
   });
+});
+
+// Exchange code for token
+app.post('/auth/token', async (req, res, next) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'Code is required' });
+  try {
+    const users = await sql`SELECT * FROM users WHERE code = ${code}`;
+    if (users.length === 0) return res.status(400).json({ error: 'Invalid code' });
+    const user = users[0];
+    const token = crypto.randomBytes(48).toString('hex');
+    await sql`INSERT INTO tokens (user_id, token) VALUES (${user.id}, ${token})`;
+    res.json({ token });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export { app };
