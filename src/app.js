@@ -28,9 +28,11 @@ app.use(passport.session());
 
 // Routes Import
 import healthcheckRoutes from "./routes/healthcheck.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 // Routes Declaration
 app.use("/api/v1/healthcheck", healthcheckRoutes);
+app.use("/api/v1/user", userRoutes);
 
 
 // Auth routes
