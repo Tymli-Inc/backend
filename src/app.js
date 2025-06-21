@@ -45,7 +45,6 @@ app.get('/auth/google/callback', (req, res, next) => {
     if (!user) return res.redirect('/login');
     req.logIn(user, (err) => {
       if (err) return next(err);
-      // redirect to the redirect page with the code
       return res.redirect(`/redirect.html?code=${user.code}`);
     });
   })(req, res, next);
@@ -76,8 +75,24 @@ app.post('/auth/token', async (req, res, next) => {
     if (users.length === 0) return res.status(400).json({ error: 'Invalid code' });
     const user = users[0];
     const token = crypto.randomBytes(48).toString('hex');
-    await sql`INSERT INTO tokens (user_id, token) VALUES (${user.id}, ${token})`;
-    res.json({ token });
+    try {
+      const result = await sql`
+        SELECT * FROM tokens WHERE id = ${user.id}
+      `;
+      if (result.length === 0) {
+        const inserted = await sql`INSERT INTO tokens (user_id, token) VALUES (${user.id}, ${token})`
+      } else {
+        const updated = await sql`
+          UPDATE tokens SET token = ${token} WHERE id = ${user.id} RETURNING *
+        `;
+        user = updated[0];
+      }
+      res.json({ token });
+    } catch (err) {
+      console.error('Error during Google authentication:', err);
+      return done(err);
+    }
+
   } catch (err) {
     next(err);
   }

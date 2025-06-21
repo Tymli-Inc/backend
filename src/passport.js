@@ -1,7 +1,7 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import sql from './database/db.js';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, v6 } from 'uuid';
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -13,9 +13,10 @@ async (accessToken, refreshToken, profile, done) => {
     // generate a unique code token
     const code = uuidv4();
     const email = profile.emails[0].value;
+
+    const image = profile.photos ? profile.photos[0].value : null;
     const googleId = profile.id;
     const name = profile.displayName;
-
     const result = await sql`
       SELECT * FROM users WHERE google_id = ${googleId}
     `;
@@ -23,10 +24,9 @@ async (accessToken, refreshToken, profile, done) => {
     let user;
 
     if (result.length === 0) {
-      // insert new user with code
       const inserted = await sql`
-        INSERT INTO users (google_id, email, name, code)
-        VALUES (${googleId}, ${email}, ${name}, ${code})
+        INSERT INTO users (google_id, email, name, code, image)
+        VALUES (${googleId}, ${email}, ${name}, ${code}, ${image})
         RETURNING *
       `;
       user = inserted[0];
