@@ -75,24 +75,24 @@ app.post('/auth/token', async (req, res, next) => {
     if (users.length === 0) return res.status(400).json({ error: 'Invalid code' });
     const user = users[0];
     const token = crypto.randomBytes(48).toString('hex');
-    try {
-      const result = await sql`
-        SELECT * FROM tokens WHERE id = ${user.id}
-      `;
-      if (result.length === 0) {
-        const inserted = await sql`INSERT INTO tokens (user_id, token) VALUES (${user.id}, ${token})`
-      } else {
-        const updated = await sql`
-          UPDATE tokens SET token = ${token} WHERE id = ${user.id} RETURNING *
-        `;
-        user = updated[0];
-      }
-      res.json({ token });
-    } catch (err) {
-      console.error('Error during Google authentication:', err);
-      return done(err);
-    }
 
+    const result = await sql`
+      select * from tokens
+      WHERE user_id = ${user.id}
+    `;
+    if (result.length > 0) {
+      await sql`
+        UPDATE tokens
+        SET token = ${token}
+        WHERE user_id = ${user.id}
+      `;
+    }else {
+      await sql`
+        INSERT INTO tokens (user_id, token)
+        VALUES (${user.id}, ${token})
+      `;
+    }
+    res.json({ token });
   } catch (err) {
     next(err);
   }
