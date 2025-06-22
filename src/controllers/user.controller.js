@@ -16,7 +16,7 @@ const getUserByToken = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid token");
     }
     const userResult = await sql`
-        SELECT id, name, email FROM users WHERE id = ${tokens[0].user_id}
+        SELECT id, name, email, image FROM users WHERE id = ${tokens[0].user_id}
     `;
     if (userResult.length === 0) {
         throw new ApiError(404, "User not found");

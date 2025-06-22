@@ -34,7 +34,7 @@ async (accessToken, refreshToken, profile, done) => {
       // update existing user's code
       const existingUser = result[0];
       const updated = await sql`
-        UPDATE users SET code = ${code} WHERE id = ${existingUser.id} RETURNING *
+        UPDATE users SET code = ${code}, image = ${image} WHERE id = ${existingUser.id} RETURNING *
       `;
       user = updated[0];
     }
