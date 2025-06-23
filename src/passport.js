@@ -2,6 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import sql from './database/db.js';
 import { v4 as uuidv4, v6 } from 'uuid';
+import { processUserImage } from './utils/imageHandler.js';
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -14,9 +15,10 @@ async (accessToken, refreshToken, profile, done) => {
     const code = uuidv4();
     const email = profile.emails[0].value;
 
-    const image = profile.photos ? profile.photos[0].value : null;
+    const googleProfileImage = profile.photos ? profile.photos[0].value : null;
     const googleId = profile.id;
     const name = profile.displayName;
+    
     const result = await sql`
       SELECT * FROM users WHERE google_id = ${googleId}
     `;
@@ -24,17 +26,27 @@ async (accessToken, refreshToken, profile, done) => {
     let user;
 
     if (result.length === 0) {
+      // Process the image (upload to Cloudinary or generate fallback)
+      const processedImageUrl = await processUserImage(googleProfileImage, name, googleId);
+      
       const inserted = await sql`
         INSERT INTO users (google_id, email, name, code, image)
-        VALUES (${googleId}, ${email}, ${name}, ${code}, ${image})
+        VALUES (${googleId}, ${email}, ${name}, ${code}, ${processedImageUrl})
         RETURNING *
       `;
       user = inserted[0];
     } else {
-      // update existing user's code
+      // update existing user's code and potentially update image
       const existingUser = result[0];
+      
+      // Process the image if it has changed or if there's no existing image
+      let imageUrl = existingUser.image;
+      if (!existingUser.image || (googleProfileImage && googleProfileImage !== existingUser.image)) {
+        imageUrl = await processUserImage(googleProfileImage, name, existingUser.id);
+      }
+      
       const updated = await sql`
-        UPDATE users SET code = ${code}, image = ${image} WHERE id = ${existingUser.id} RETURNING *
+        UPDATE users SET code = ${code}, image = ${imageUrl} WHERE id = ${existingUser.id} RETURNING *
       `;
       user = updated[0];
     }
