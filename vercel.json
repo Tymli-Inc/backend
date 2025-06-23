@@ -3,6 +3,7 @@
   "builds": [
     {
       "src": "src/index.js",
+      "public": "public/**/*",
       "use": "@vercel/node"
     }
   ],
