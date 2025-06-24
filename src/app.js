@@ -5,6 +5,11 @@ import session from 'express-session';
 import passport from 'passport';
 import sql from './database/db.js';
 import crypto from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -34,13 +39,14 @@ import userRoutes from "./routes/user.routes.js";
 app.use("/api/v1/healthcheck", healthcheckRoutes);
 app.use("/api/v1/user", userRoutes);
 
+app.get('/redirect.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/redirect.html'));
+});
 
-// Auth routes
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-// handle Google OAuth callback and redirect with code token
 app.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', (err, user, info) => {
     if (err) return next(err);
