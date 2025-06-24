@@ -5,10 +5,18 @@
       "src": "src/index.js",
       "use": "@vercel/node"
     }
-  ],
+  ],  
   "routes": [
     {
       "handle": "filesystem"
+    },
+    {
+      "src": "/redirect.html",
+      "dest": "/public/redirect.html"
+    },
+    {
+      "src": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|css|js))",
+      "dest": "/public/$1"
     },
     {
       "src": "/(.*)",
