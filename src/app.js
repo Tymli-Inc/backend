@@ -39,6 +39,22 @@ import userRoutes from "./routes/user.routes.js";
 app.use("/api/v1/healthcheck", healthcheckRoutes);
 app.use("/api/v1/user", userRoutes);
 
+app.post('/api/v1/newsletter', async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+  try {
+    // Insert the email into the newsletter table
+    await sql`INSERT INTO newsletter (email) VALUES (${email})`;
+    res.status(201).json({ message: 'Email subscribed successfully' });
+  } catch (err) {
+    // Handle unique constraint violation (if email already exists)
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Email already subscribed' });
+    }
+    next(err);
+  }
+});
+
 app.get('/redirect.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/redirect.html'));
 });
