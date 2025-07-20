@@ -2,6 +2,7 @@ import sql from "../database/db.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
+import { getUserId } from "../utils/getUserId.js";
 
 const getUserByToken = asyncHandler(async (req, res) => {
     try {
@@ -60,7 +61,7 @@ const storeUserInfo = asyncHandler(async (req, res) => {
         console.log('Received request body:', JSON.stringify(req.body, null, 2));
         
         const { 
-            userId, 
+            token, 
             name, 
             job_role, 
             referralSource,
@@ -73,7 +74,12 @@ const storeUserInfo = asyncHandler(async (req, res) => {
             productivity_goal,
             enforcement_preference
         } = req.body;
-        
+
+        const userId = await getUserId(token);
+        if (!userId) {
+            throw new ApiError(400, "Invalid token");
+        }
+
         // Detailed validation with specific error messages
         const missingFields = [];
         if (!userId) missingFields.push('userId');
@@ -163,7 +169,10 @@ const storeUserInfo = asyncHandler(async (req, res) => {
 
 const fetchStoredInfo = asyncHandler(async (req, res) => {
     try {
-        const { userId } = req.body;
+        const { token } = req.body;
+
+        const userId = await getUserId(token);
+
         if (!userId) {
             throw new ApiError(400, "userId is required");
         }
