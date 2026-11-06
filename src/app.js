@@ -45,11 +45,13 @@ app.use(passport.session());
 import healthcheckRoutes from "./routes/healthcheck.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import newsletterRoutes from "./routes/newsletter.routes.js";
+import paddleRoutes from "./routes/paddle.routes.js";
 
 // Routes Declaration
 app.use("/api/v1/healthcheck", healthcheckRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/newsletter", newsletterRoutes);
+app.use("/api/v1/paddle", paddleRoutes);
 
 app.get('/redirect.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/redirect.html'));

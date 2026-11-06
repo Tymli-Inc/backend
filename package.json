@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
+    "@paddle/paddle-node-sdk": "^3.11.0",
     "canvas": "^3.1.1",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",

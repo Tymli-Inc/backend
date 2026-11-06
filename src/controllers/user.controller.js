@@ -18,12 +18,27 @@ const getUserByToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Invalid token");
         }
         const userResult = await sql`
-            SELECT id, name, email, image FROM users WHERE id = ${tokens[0].user_id}
+            SELECT 
+                id, name, email, image,
+                plan_type, plan_status, 
+                current_period_end, cancel_at_period_end
+            FROM users 
+            WHERE id = ${tokens[0].user_id}
         `;
         if (userResult.length === 0) {
             throw new ApiError(404, "User not found");
         }
-        res.status(200).json(new ApiResponse(200, userResult[0], "User fetched successfully"));
+        
+        const user = userResult[0];
+        
+        // Add computed fields for convenience
+        const response = {
+            ...user,
+            is_pro: user.plan_type !== 'free' && user.plan_status === 'active',
+            plan_expires_at: user.current_period_end,
+        };
+        
+        res.status(200).json(new ApiResponse(200, response, "User fetched successfully"));
     } catch (error) {
         if (error instanceof ApiError) {
             res.status(error.statusCode).json(new ApiResponse(error.statusCode, null, error.message));
