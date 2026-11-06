@@ -111,13 +111,22 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        
+
+        // Allowlisted deep-link schemes. Desktop keeps its exact existing link;
+        // mobile uses its own scheme with an `auth` host.
+        const allowedSchemes = ['hourglass', 'tymlimobile'];
+        const requestedScheme = (urlParams.get('scheme') || 'hourglass').toLowerCase();
+        const scheme = allowedSchemes.includes(requestedScheme) ? requestedScheme : 'hourglass';
+        const deepLink = scheme === 'hourglass'
+            ? `hourglass://?code=${code}`
+            : `${scheme}://auth?code=${code}`;
+
         if (code) {
             // Set the fallback link
-            document.getElementById('fallback-link').href = `hourglass://?code=${code}`;
-            
+            document.getElementById('fallback-link').href = deepLink;
+
             setTimeout(() => {
-                window.location.href = `hourglass://?code=${code}`;
+                window.location.href = deepLink;
             }, 2000);
         } else {
             document.querySelector('.message').textContent = 'Authentication failed';

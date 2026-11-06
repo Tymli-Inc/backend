@@ -13,6 +13,16 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Deep-link schemes the OAuth callback may redirect back to. Allowlisted so a
+// crafted `?redirect=` value cannot turn this flow into an open redirect.
+const AUTH_REDIRECT_SCHEMES = new Set(['hourglass', 'tymlimobile']);
+
+function normalizeRedirectScheme(value) {
+  if (typeof value !== 'string') return null;
+  const scheme = value.split('://')[0].trim().toLowerCase();
+  return AUTH_REDIRECT_SCHEMES.has(scheme) ? scheme : null;
+}
+
 app.use(cors({
     origin: '*', 
     credentials: true
@@ -45,9 +55,13 @@ app.get('/redirect.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/redirect.html'));
 });
 
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
+app.get('/auth/google', (req, res, next) => {
+  const scheme = normalizeRedirectScheme(req.query.redirect);
+  return passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    ...(scheme ? { state: scheme } : {})
+  })(req, res, next);
+});
 
 app.get('/auth/google/callback', (req, res, next) => {
   passport.authenticate('google', (err, user, info) => {
@@ -55,7 +69,11 @@ app.get('/auth/google/callback', (req, res, next) => {
     if (!user) return res.redirect('/login');
     req.logIn(user, (err) => {
       if (err) return next(err);
-      return res.redirect(`/redirect.html?code=${user.code}`);
+      const scheme = normalizeRedirectScheme(req.query.state);
+      const suffix = scheme && scheme !== 'hourglass'
+        ? `&scheme=${encodeURIComponent(scheme)}`
+        : '';
+      return res.redirect(`/redirect.html?code=${user.code}${suffix}`);
     });
   })(req, res, next);
 });
